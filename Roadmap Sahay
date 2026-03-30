@@ -1,4 +1,29 @@
 
+The Problem It Solves
+Millions of people in India and abroad don't understand:
+
+Their medical reports
+Their legal rights
+Government schemes they're eligible for
+Bank loans, insurance policies
+
+They get cheated, ignored, or simply lost — because everything is in complex English.
+What SAHAY Does
+FeatureWho It HelpsAI Behind It🏥 Medical Report ReaderPatients who can't understand lab reportsOCR + LLM + multilingual⚖️ Legal Rights ExplainerWorkers, tenants, accident victimsRAG on legal documents🏛️ Government Scheme FinderFarmers, BPL families, womenLLM + scheme database💊 Medicine Safety CheckerElderly people, caregiversDrug interaction ML model🗣️ Works in Telugu, Hindi, Tamil...600M+ people who aren't English-firstWhisper + IndicBERT
+Why It's Unbeatable
+
+Helps hundreds of millions, not just students
+No ethical issues — it informs, never replaces professionals
+Massive abroad opportunity — same problem exists in Africa, Southeast Asia, Latin America
+Deep AIML stack: NLP, OCR, RAG, multilingual models, voice AI
+Could be a NGO partnership, government contract, or VC-funded startup
+
+
+
+
+
+
+
 🗂️ Your 15-Project Mastery Roadmap → Leading to SAHAY
 
 
