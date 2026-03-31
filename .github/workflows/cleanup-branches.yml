@@ -19,8 +19,10 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/Project-1-OCR%5D")
           if [ "$RESPONSE" = "204" ]; then
             echo "Successfully deleted branch: Project-1-OCR]"
-          elif [ "$RESPONSE" = "422" ]; then
+          elif [ "$RESPONSE" = "404" ]; then
             echo "Branch Project-1-OCR] not found or already deleted"
+          elif [ "$RESPONSE" = "422" ]; then
+            echo "Branch deletion failed due to validation error (422)"
           else
             echo "Unexpected response: $RESPONSE"
             exit 1
