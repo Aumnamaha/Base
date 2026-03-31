@@ -1,0 +1,42 @@
+name: Cleanup Branches
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  administration: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete improper branch Project-1-OCR]
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/git/refs/heads/Project-1-OCR%5D")
+          if [ "$RESPONSE" = "204" ]; then
+            echo "Successfully deleted branch: Project-1-OCR]"
+          elif [ "$RESPONSE" = "422" ]; then
+            echo "Branch Project-1-OCR] not found or already deleted"
+          else
+            echo "Unexpected response: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Set Project-1-OCR as default branch
+        run: |
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X PATCH \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}" \
+            -d '{"default_branch": "Project-1-OCR"}')
+          if [ "$RESPONSE" = "200" ]; then
+            echo "Successfully set Project-1-OCR as default branch"
+          else
+            echo "Failed to set default branch. Response code: $RESPONSE"
+            cat /tmp/response.json
+            exit 1
+          fi
