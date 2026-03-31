@@ -1,0 +1,701 @@
+import { useState, useRef, useCallback } from "react";
+
+const SCAN_LINES_COUNT = 8;
+
+const typewriterStyle = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: #222222;
+  --accent: #00ff88;
+  --accent2: #00ccff;
+  --warn: #ff6b35;
+  --text: #e8e8e8;
+  --muted: #555;
+  --mono: 'Space Mono', monospace;
+  --display: 'Syne', sans-serif;
+}
+
+body { background: var(--bg); color: var(--text); }
+
+.scanner-root {
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: var(--mono);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.corner-deco {
+  position: fixed;
+  width: 120px; height: 120px;
+  pointer-events: none;
+  z-index: 1;
+}
+.corner-deco.tl { top: 20px; left: 20px; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); opacity: 0.4; }
+.corner-deco.tr { top: 20px; right: 20px; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); opacity: 0.4; }
+.corner-deco.bl { bottom: 20px; left: 20px; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); opacity: 0.4; }
+.corner-deco.br { bottom: 20px; right: 20px; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); opacity: 0.4; }
+
+.header {
+  position: relative;
+  z-index: 10;
+  padding: 40px 60px 20px;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.header-title {
+  font-family: var(--display);
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.header-title span {
+  color: var(--accent);
+}
+
+.status-pill {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.main {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 40px 60px;
+  gap: 30px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* DROP ZONE */
+.drop-zone {
+  flex: 1;
+  min-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.drop-zone:hover, .drop-zone.dragging {
+  border-color: var(--accent);
+  background: rgba(0,255,136,0.03);
+}
+
+.drop-zone.dragging .dz-icon {
+  transform: scale(1.1);
+  color: var(--accent);
+}
+
+.dz-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  transition: all 0.3s;
+  opacity: 0.4;
+}
+
+.dz-text {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.dz-sub {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.dz-formats {
+  margin-top: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.fmt-tag {
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  border-radius: 1px;
+}
+
+/* IMAGE PREVIEW */
+.image-preview-wrap {
+  flex: 1;
+  min-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.image-preview-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.img-meta {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.8);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* SCAN BUTTON */
+.scan-btn {
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #000;
+}
+
+.scan-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.scan-btn.scanning {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  animation: borderPulse 1s infinite;
+}
+
+@keyframes borderPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,204,255,0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(0,204,255,0); }
+}
+
+/* SCANNING OVERLAY */
+.scanning-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.scan-beam {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+  box-shadow: 0 0 20px var(--accent2);
+  animation: scanBeam 2s ease-in-out infinite;
+}
+
+@keyframes scanBeam {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scanning-text {
+  color: var(--accent2);
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* OUTPUT PANEL */
+.output-panel {
+  flex: 1;
+  min-height: 380px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  position: relative;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.output-type-badge {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.copy-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 1px;
+}
+
+.copy-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.output-text {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.output-text::-webkit-scrollbar { width: 4px; }
+.output-text::-webkit-scrollbar-track { background: var(--surface); }
+.output-text::-webkit-scrollbar-thumb { background: var(--border); }
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.empty-icon { font-size: 32px; opacity: 0.3; }
+.empty-text { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+
+/* STATS */
+.stats-row {
+  display: flex;
+  gap: 12px;
+}
+
+.stat-box {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 1px;
+}
+
+.stat-val {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.error-msg {
+  padding: 12px 16px;
+  border: 1px solid var(--warn);
+  background: rgba(255,107,53,0.05);
+  color: var(--warn);
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 1px;
+}
+
+/* CLEAR BTN */
+.clear-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 1px;
+  margin-left: auto;
+  display: block;
+}
+
+.clear-btn:hover {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; padding: 20px; }
+  .header { padding: 24px 20px 16px; }
+  .header-title { font-size: 28px; }
+}
+`;
+
+export default function OCRScanner() {
+  const [image, setImage] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageMeta, setImageMeta] = useState(null);
+  const [extractedText, setExtractedText] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [error, setError] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const fileRef = useRef();
+
+  const wordCount = extractedText.trim() ? extractedText.trim().split(/\s+/).length : 0;
+  const charCount = extractedText.length;
+  const lineCount = extractedText.trim() ? extractedText.trim().split("\n").length : 0;
+
+  const handleFile = (file) => {
+    if (!file || !file.type.startsWith("image/")) {
+      setError("Please upload a valid image file (JPG, PNG, WEBP, BMP, TIFF).");
+      return;
+    }
+    setError("");
+    setExtractedText("");
+    setImageFile(file);
+    setImageMeta({ name: file.name, size: (file.size / 1024).toFixed(1) + " KB", type: file.type.split("/")[1].toUpperCase() });
+    const reader = new FileReader();
+    reader.onload = (e) => setImage(e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const onDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleFile(file);
+  }, []);
+
+  const onDragOver = (e) => { e.preventDefault(); setDragging(true); };
+  const onDragLeave = () => setDragging(false);
+
+  const handleScan = async () => {
+    if (!image) return;
+    setScanning(true);
+    setError("");
+    setExtractedText("");
+
+    try {
+      const base64 = image.split(",")[1];
+      const mediaType = imageFile.type || "image/jpeg";
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: { type: "base64", media_type: mediaType, data: base64 }
+              },
+              {
+                type: "text",
+                text: `You are an advanced OCR (Optical Character Recognition) engine. Extract ALL text from this image with maximum accuracy.
+
+Instructions:
+- Extract every word, number, symbol, and character visible
+- Preserve the original layout and line breaks as closely as possible
+- For tables, preserve column alignment using spacing or | separators
+- For handwritten text, do your best to interpret it accurately and note uncertain words with [?]
+- For medical bills, IDs, forms: preserve all field labels and their values
+- If the image has multiple sections/columns, extract them left-to-right, top-to-bottom
+- Do NOT add any commentary, explanation, or metadata
+- Output ONLY the raw extracted text, nothing else`
+              }
+            ]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message);
+      const text = data.content?.map(b => b.text || "").join("") || "";
+      setExtractedText(text || "No text detected in this image.");
+    } catch (err) {
+      setError("Scan failed: " + err.message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(extractedText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleClear = () => {
+    setImage(null);
+    setImageFile(null);
+    setImageMeta(null);
+    setExtractedText("");
+    setError("");
+  };
+
+  return (
+    <>
+      <style>{typewriterStyle}</style>
+      <div className="scanner-root">
+        <div className="grid-bg" />
+        <div className="corner-deco tl" />
+        <div className="corner-deco tr" />
+        <div className="corner-deco bl" />
+        <div className="corner-deco br" />
+
+        {/* HEADER */}
+        <header className="header">
+          <div>
+            <div className="header-label">// Optical Character Recognition</div>
+            <div className="header-title">DOC<span>SCAN</span></div>
+          </div>
+          <div className="status-pill">
+            <div className="status-dot" />
+            SYSTEM ONLINE
+          </div>
+        </header>
+
+        {/* MAIN */}
+        <main className="main">
+          {/* LEFT: Upload + Controls */}
+          <div className="panel">
+            <div className="panel-label">01 — Input Document</div>
+
+            {!image ? (
+              <div
+                className={`drop-zone ${dragging ? "dragging" : ""}`}
+                onClick={() => fileRef.current.click()}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+              >
+                <div className="dz-icon">⬡</div>
+                <div className="dz-text">Drop image here</div>
+                <div className="dz-sub">or click to browse</div>
+                <div className="dz-formats">
+                  {["JPG", "PNG", "WEBP", "BMP", "TIFF"].map(f => (
+                    <div key={f} className="fmt-tag">{f}</div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="image-preview-wrap" style={{ minHeight: 380 }}>
+                <img src={image} alt="uploaded" />
+                {scanning && (
+                  <div className="scanning-overlay">
+                    <div className="scan-beam" />
+                    <div className="scanning-text">Extracting text...</div>
+                  </div>
+                )}
+                {imageMeta && (
+                  <div className="img-meta">
+                    <span>{imageMeta.name}</span>
+                    <span>{imageMeta.type} · {imageMeta.size}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={e => handleFile(e.target.files[0])}
+            />
+
+            {error && <div className="error-msg">⚠ {error}</div>}
+
+            <button
+              className={`scan-btn ${scanning ? "scanning" : ""}`}
+              onClick={handleScan}
+              disabled={!image || scanning}
+            >
+              {scanning ? "// Scanning..." : "→ Extract Text"}
+            </button>
+
+            {image && !scanning && (
+              <button className="clear-btn" onClick={handleClear}>✕ Clear</button>
+            )}
+
+            {/* STATS */}
+            {extractedText && (
+              <div className="stats-row">
+                <div className="stat-box">
+                  <div className="stat-val">{wordCount}</div>
+                  <div className="stat-label">Words</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-val">{charCount}</div>
+                  <div className="stat-label">Chars</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-val">{lineCount}</div>
+                  <div className="stat-label">Lines</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: Output */}
+          <div className="panel">
+            <div className="panel-label">02 — Extracted Text</div>
+
+            <div className="output-panel">
+              {extractedText ? (
+                <>
+                  <div className="output-header">
+                    <div className="output-type-badge">// Raw Text Output</div>
+                    <button className="copy-btn" onClick={handleCopy}>
+                      {copied ? "✓ Copied" : "Copy All"}
+                    </button>
+                  </div>
+                  <div className="output-text">{extractedText}</div>
+                </>
+              ) : (
+                <div className="empty-state">
+                  <div className="empty-icon">⬡</div>
+                  <div className="empty-text">
+                    {scanning ? "Processing..." : "Awaiting scan"}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
