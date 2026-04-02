@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroVoice | Whisper STT</title>
+    <meta name="description" content="AI-powered multilingual speech to text engine using Whisper">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="background-globes">
+        <div class="globe globe-1"></div>
+        <div class="globe globe-2"></div>
+        <div class="globe globe-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i data-lucide="mic-2"></i>
+                <h2>NeuroVoice</h2>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#demo">Live Demo</a>
+                <a href="https://github.com/yourusername/speech-x-text" target="_blank" class="nav-btn">
+                    <i data-lucide="github"></i> GitHub
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="badge">🚀 Fully Client-End-Side Processing</div>
+        <h1 class="hero-title">Multilingual Speech Intelligence. <br><span class="text-gradient">Done Right.</span></h1>
+        <p class="hero-subtitle">Transcribe English and native Indian languages with unparalleled accuracy using state-of-the-art AI. Private, fast, and entirely client-oriented.</p>
+        <a href="#demo" class="primary-btn hero-btn">
+            Try it Now <i data-lucide="arrow-right"></i>
+        </a>
+    </header>
+
+    <!-- Main Widget Section -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <div class="stt-card glass-panel">
+                <div class="upload-zone" id="drop-zone">
+                    <input type="file" id="audio-upload" accept="audio/*" hidden>
+                    <i data-lucide="upload-cloud" class="upload-icon"></i>
+                    <h2>Upload Audio</h2>
+                    <p>Drag and drop your audio file here or <span class="text-accent">browse</span></p>
+                    <div class="supported-formats">wav, mp3, m4a, flac allowed</div>
+                </div>
+
+                <div class="controls">
+                    <div class="language-selector">
+                        <label for="lang">Language</label>
+                        <select id="lang">
+                            <option value="en">English (en)</option>
+                            <option value="hi">Hindi (hi)</option>
+                            <option value="bn">Bengali (bn)</option>
+                            <option value="ta">Tamil (ta)</option>
+                            <option value="te">Telugu (te)</option>
+                            <option value="mr">Marathi (mr)</option>
+                            <option value="auto">Auto-Detect</option>
+                        </select>
+                    </div>
+                    <button id="transcribe-btn" class="primary-btn execute-btn" disabled>
+                        <span>Transcribe</span>
+                        <i data-lucide="zap"></i>
+                    </button>
+                </div>
+                
+                <div class="progress-bar-container hidden" id="progress-container">
+                    <div class="progress-bar"></div>
+                    <p>Processing neural data...</p>
+                </div>
+
+                <div class="result-box hidden" id="result-box">
+                    <div class="result-header">
+                        <h3>Transcription Result</h3>
+                        <button class="icon-btn" id="copy-btn" title="Copy to clipboard"><i data-lucide="copy"></i></button>
+                    </div>
+                    <div class="result-content" id="transcription-text">
+                        <!-- Text will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <h2 class="section-title">Why NeuroVoice?</h2>
+        <div class="features-grid">
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i data-lucide="shield-check"></i></div>
+                <h3>Fully Client-End-Side</h3>
+                <p>100% of the speech parsing happens locally avoiding server trips. Ensure complete data privacy and security.</p>
+            </div>
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i data-lucide="languages"></i></div>
+                <h3>Multilingual Engine</h3>
+                <p>Native support for English alongside complex Indian languages including Hindi, Tamil, and Bengali.</p>
+            </div>
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i data-lucide="zap"></i></div>
+                <h3>Lightning Fast</h3>
+                <p>Optimized execution models tuned for low-latency feedback and incredible inference speeds.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="logo">
+                <i data-lucide="mic-2"></i>
+                <h3>NeuroVoice</h3>
+            </div>
+            <p>Built with ❤️ using Hugging Face & Vanilla JS.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

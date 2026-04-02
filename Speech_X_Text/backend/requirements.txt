@@ -1,0 +1,12 @@
+torch>=2.0.0
+transformers>=4.38.0
+datasets>=2.16.0
+evaluate>=0.4.1
+librosa>=0.10.1
+jiwer>=3.0.3
+accelerate>=0.27.2
+soundfile>=0.12.1
+pytest>=8.0.0
+fastapi>=0.110.0
+uvicorn>=0.27.1
+python-multipart>=0.0.9
