@@ -10,9 +10,13 @@ speech-to-text-multilingual/
 ├── tests/
 │   ├── test_inference.py               # Unit tests
 │   └── test_samples/                   # Sample audio files (WAV, MP3)
+├──scripts/
+    ├──
 ├── data/
 │   ├── sample_audios/                  # User test audio files
 │   └── results/                        # Output transcriptions (JSON)
+├──models/
+    ├──
 ├── requirements.txt
 ├── README.md
 ├── .gitignore
