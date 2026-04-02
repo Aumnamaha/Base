@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // once the backend is deployed. For local testing, it connects to localhost.
     const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
         ? "http://127.0.0.1:8000/transcribe" 
-        : "https://your-backend-url.onrender.com/transcribe";
+        : "https://base-pd3b.onrender.com";
 
     // Handle Drag & Drop
     dropZone.addEventListener("dragover", (e) => {
