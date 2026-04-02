@@ -21,3 +21,9 @@ speech-to-text-multilingual/
 ├── README.md
 ├── .gitignore
 └── LICENSE
+
+
+
+used render.com to deploy backend but insufficent ram size for free plan 
+
+so try running on local machine or computer
