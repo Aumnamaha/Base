@@ -1,0 +1,19 @@
+speech-to-text-multilingual/
+├── notebooks/
+│   ├── 01_data_exploration.ipynb       # Load & explore audio datasets
+│   ├── 02_whisper_inference.ipynb      # Test Whisper models (base, small, tiny)
+│   └── 03_lang_detection.ipynb         # Test language detection libraries
+├── src/
+│   ├── inference.py                    # Main STT pipeline
+│   ├── language_detector.py            # Language detection wrapper
+│   └── utils.py                        # Audio preprocessing, helpers
+├── tests/
+│   ├── test_inference.py               # Unit tests
+│   └── test_samples/                   # Sample audio files (WAV, MP3)
+├── data/
+│   ├── sample_audios/                  # User test audio files
+│   └── results/                        # Output transcriptions (JSON)
+├── requirements.txt
+├── README.md
+├── .gitignore
+└── LICENSE
