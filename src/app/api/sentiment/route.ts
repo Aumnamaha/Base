@@ -22,10 +22,10 @@ const POSITIVE_WORDS = new Map([
   ["recommend", 1.5], ["recommended", 1.5], ["exactly", 0.5], ["absolutely", 1], ["definitely", 1],
   ["certainly", 1], ["really", 0.5], ["very", 0.5], ["extremely", 1], ["incredibly", 1],
   ["exceptional", 2], ["remarkable", 2], ["phenomenal", 2], ["extraordinary", 2], ["stellar", 2],
-  ["fabulous", 2], ["glorious", 2], ["blissful", 2], "ecstatic" ? ["ecstatic", 2] : ["ecstatic", 2],
+  ["fabulous", 2], ["glorious", 2], ["blissful", 2], ["ecstatic", 2],
   ["euphoric", 2], ["radiant", 1.5], ["vibrant", 1.5], ["refreshing", 1.5], ["uplifting", 2],
   ["heartwarming", 2], ["grateful", 1.5], ["thankful", 1.5], ["appreciate", 1.5], ["appreciated", 1.5],
-  ["treasure", 1.5], ["valuable", 1], ["worth", 1], ["reliable", 1.5], "trustworthy" ? ["trustworthy", 1.5] : ["trustworthy", 1.5],
+  ["treasure", 1.5], ["valuable", 1], ["worth", 1], ["reliable", 1.5], ["trustworthy", 1.5],
   ["innovative", 1.5], ["creative", 1], ["elegant", 1.5], ["sophisticated", 1.5], ["premium", 1],
   ["quality", 1], ["superior", 2], ["top-notch", 2], ["first-class", 2], ["world-class", 2],
   ["fun", 1.5], ["exciting", 1.5], ["fascinating", 1.5], ["captivating", 2], ["engaging", 1.5],
@@ -76,15 +76,39 @@ const INTENSIFIERS = new Map([
   ["remarkably", 1.8], ["exceptionally", 2], ["particularly", 1.3],
 ]);
 
-const EMOTION_KEYWORDS = {
-  joy: new Set(["happy", "joy", "delighted", "cheerful", "glad", "thrilled", "ecstatic", "elated", "jubilant", "blissful", "euphoric", "merry", "gleeful", "content", "pleased", "excited"]),
-  anger: new Set(["angry", "furious", "rage", "outraged", "irate", "livid", "annoyed", "frustrated", "irritated", "hostile", "aggressive", "bitter", "resentful", "enraged", "infuriated"]),
-  sadness: new Set(["sad", "depressed", "miserable", "gloomy", "heartbroken", "melancholy", "sorrowful", "despondent", "down", "blue", "lonely", "grief", "mournful", "woeful", "dismal"]),
-  surprise: new Set(["surprise", "surprised", "shocked", "astonished", "amazed", "stunned", "startled", "bewildered", "dumbfounded", "flabbergasted", "unexpected", "unbelievable"]),
-  fear: new Set(["fear", "afraid", "scared", "terrified", "anxious", "worried", "nervous", "panicked", "frightened", "alarmed", "dread", "horror", "petrified"]),
-  disgust: new Set(["disgust", "disgusted", "revolting", "repulsive", "repulsed", "nauseating", "gross", "vile", "loathsome", "abhorrent", "sickening"]),
-  trust: new Set(["trust", "trusted", "reliable", "honest", "faithful", "loyal", "dependable", "sincere", "genuine", "authentic", "credible"]),
-  anticipation: new Set(["anticipation", "expect", "expected", "await", "awaiting", "eager", "hopeful", "optimistic", "forward", "looking", "impatient"]),
+const EMOTION_KEYWORDS: Record<string, { words: Set<string>; weight: number }> = {
+  joy: {
+    words: new Set(["happy", "joy", "joyful", "delighted", "cheerful", "glad", "thrilled", "ecstatic", "elated", "jubilant", "blissful", "euphoric", "merry", "gleeful", "content", "pleased", "excited", "amazing", "wonderful", "fantastic", "awesome", "excellent", "outstanding", "brilliant", "superb", "love", "loved", "loving", "beautiful", "perfect", "incredible", "magnificent", "terrific", "marvelous", "delightful", "fun", "exciting", "great", "best", "paradise", "heavenly", "radiant", "vibrant", "uplifting", "heartwarming", "blessed", "grateful", "thankful"]),
+    weight: 1.0,
+  },
+  anger: {
+    words: new Set(["angry", "furious", "rage", "outraged", "irate", "livid", "annoyed", "frustrated", "irritated", "hostile", "aggressive", "bitter", "resentful", "enraged", "infuriated", "mad", "hate", "hated", "loathe", "resent", "displeased", "wrathful", "indignant", "provoked", "offended"]),
+    weight: 1.3,
+  },
+  sadness: {
+    words: new Set(["sad", "depressed", "miserable", "gloomy", "heartbroken", "melancholy", "sorrowful", "despondent", "lonely", "grief", "mournful", "woeful", "dismal", "crying", "tears", "regret", "hopeless", "devastated", "tragic", "painful", "suffering", "unhappy", "disappointed", "upset", "somber", "bleak", "despair"]),
+    weight: 1.2,
+  },
+  surprise: {
+    words: new Set(["surprise", "surprised", "shocked", "astonished", "amazed", "stunned", "startled", "bewildered", "dumbfounded", "flabbergasted", "unexpected", "unbelievable", "wow", "remarkable", "extraordinary", "phenomenal", "speechless", "awe", "sudden"]),
+    weight: 0.9,
+  },
+  fear: {
+    words: new Set(["fear", "afraid", "scared", "terrified", "anxious", "worried", "nervous", "panicked", "frightened", "alarmed", "dread", "horror", "petrified", "phobia", "nightmare", "creepy", "eerie", "intimidating", "threatening", "dangerous", "paranoid", "uneasy"]),
+    weight: 1.1,
+  },
+  disgust: {
+    words: new Set(["disgust", "disgusted", "revolting", "repulsive", "repulsed", "nauseating", "gross", "vile", "loathsome", "abhorrent", "sickening", "nasty", "filthy", "rotten", "putrid", "repugnant", "foul", "ghastly", "atrocious", "appalling"]),
+    weight: 1.2,
+  },
+  trust: {
+    words: new Set(["trust", "trusted", "reliable", "honest", "faithful", "loyal", "dependable", "sincere", "genuine", "authentic", "credible", "confident", "believe", "believes", "secure", "safe", "comfortable", "assured", "transparent", "consistent"]),
+    weight: 0.8,
+  },
+  anticipation: {
+    words: new Set(["anticipation", "eager", "hopeful", "optimistic", "impatient", "awaiting", "upcoming", "soon", "ready", "prepared", "planning", "countdown"]),
+    weight: 0.7,
+  },
 };
 
 const TOXIC_PATTERNS = [
@@ -185,25 +209,56 @@ function analyzeSentiment(text: string) {
   };
 }
 
-function detectEmotions(text: string) {
+function detectEmotions(text: string, sentimentLabel: string): { dominant: string; emotions: Record<string, number> } {
   const tokens = tokenize(text);
   const emotionScores: Record<string, number> = {};
 
-  for (const [emotion, keywords] of Object.entries(EMOTION_KEYWORDS)) {
+  for (const [emotion, data] of Object.entries(EMOTION_KEYWORDS)) {
     let score = 0;
-    for (const token of tokens) {
-      if (keywords.has(token)) {
-        score++;
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (data.words.has(token)) {
+        // Check for negation in previous word
+        const prevWord = i > 0 ? tokens[i - 1] : "";
+        const isNegated =
+          prevWord === "not" ||
+          prevWord === "no" ||
+          prevWord === "never" ||
+          prevWord.endsWith("n't");
+
+        if (isNegated) {
+          // Negated emotion: skip — don't count
+          continue;
+        }
+
+        // Check for intensifier in previous word
+        const intensifier = INTENSIFIERS.get(prevWord) || 1;
+        score += data.weight * intensifier;
       }
     }
     if (score > 0) {
-      emotionScores[emotion] = score;
+      emotionScores[emotion] = Math.round(score * 100) / 100;
+    }
+  }
+
+  // Fallback: if no emotion keywords matched, derive from sentiment
+  if (Object.keys(emotionScores).length === 0) {
+    if (sentimentLabel === "Positive") {
+      emotionScores.joy = 1.0;
+      emotionScores.trust = 0.5;
+    } else if (sentimentLabel === "Negative") {
+      emotionScores.sadness = 0.7;
+      emotionScores.anger = 0.5;
+    } else {
+      emotionScores.joy = 0.4;
+      emotionScores.trust = 0.3;
+      emotionScores.sadness = 0.3;
     }
   }
 
   const sorted = Object.entries(emotionScores).sort((a, b) => b[1] - a[1]);
-  const dominant = sorted.length > 0 ? sorted[0][0] : "neutral";
-  const total = sorted.reduce((s, [, v]) => s + v, 0) || 1;
+  const dominant = sorted[0][0];
+  const total = sorted.reduce((s, [, v]) => s + v, 0);
 
   return {
     dominant,
@@ -301,7 +356,7 @@ export async function POST(request: NextRequest) {
 
     // Emotion Detection
     if (analysisType === "emotion" || analysisType === "all") {
-      results.emotion = detectEmotions(text);
+      results.emotion = detectEmotions(text, results.sentiment.label);
     }
 
     // Keyword Extraction

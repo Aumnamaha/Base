@@ -1098,45 +1098,53 @@ export default function SentimentIQ() {
                   <code className="text-xs font-mono text-muted-foreground">/api/sentiment</code>
                 </div>
                 <Separator className="bg-border/50" />
+
                 <div className="space-y-3">
                   <div>
                     <h4 className="text-xs font-semibold mb-2">Request Body</h4>
-                    <pre className="text-xs bg-black/30 rounded-lg p-3 font-mono text-muted-foreground">
-{`{
-  "text": "Your text to analyze",
-  "analysisType": "sentiment"
-}`}
-                    </pre>
+                    <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">text</strong> — The text string to analyze (1 to 5000 characters)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">analysisType</strong> — Type of analysis: <code className="text-foreground bg-muted px-1 rounded">sentiment</code> | <code className="text-foreground bg-muted px-1 rounded">emotion</code> | <code className="text-foreground bg-muted px-1 rounded">keywords</code> | <code className="text-foreground bg-muted px-1 rounded">toxicity</code> | <code className="text-foreground bg-muted px-1 rounded">all</code></span>
+                      </li>
+                    </ul>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-semibold mb-2">Response</h4>
-                    <pre className="text-xs bg-black/30 rounded-lg p-3 font-mono text-muted-foreground overflow-x-auto">
-{`{
-  "success": true,
-  "results": {
-    "sentiment": {
-      "label": "Positive",
-      "confidence": 0.98,
-      "scores": { "positive": 0.98, "negative": 0.02 }
-    },
-    "emotion": { "dominant": "joy", "emotions": {...} },
-    "keywords": [{ "word": "great", "frequency": 2 }],
-    "toxicity": { "isToxic": false, "score": 0.0, "flags": [] }
-  },
-  "metadata": {
-    "processingTime": "12ms",
-    "wordCount": 15,
-    "model": "DistilBERT-finetuned-SST-2"
-  }
-}`}
-                    </pre>
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                    <Info className="h-3 w-3" />
-                    <span>analysisType options: <code className="text-foreground">sentiment</code> | <code className="text-foreground">emotion</code> | <code className="text-foreground">keywords</code> | <code className="text-foreground">toxicity</code> | <code className="text-foreground">all</code></span>
+                  <div>
+                    <h4 className="text-xs font-semibold mb-2">Response Fields</h4>
+                    <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">results.sentiment</strong> — Contains label (Positive/Negative/Neutral), confidence score, positive & negative score breakdown, and word counts</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">results.emotion</strong> — Contains the dominant emotion (joy, anger, sadness, surprise, fear, disgust, trust, anticipation) and a percentage breakdown of all detected emotions</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">results.keywords</strong> — Top 5 keywords extracted by frequency analysis (excluding stop words)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">results.toxicity</strong> — Contains a boolean flag, toxicity score (0-1), and an array of specific toxic pattern flags if detected</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                        <span><strong className="text-foreground">metadata</strong> — Processing time in ms, word count, character count, and the model used for analysis</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <Info className="h-3 w-3" />
+                      <span>Sentiment analysis runs on every request by default. Other analysis types are triggered by the <code className="text-foreground">analysisType</code> parameter.</span>
+                    </div>
                   </div>
                 </div>
               </div>

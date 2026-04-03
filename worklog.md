@@ -54,3 +54,30 @@ Stage Summary:
 - Complete Python backend reference code (optimized for production)
 - API documentation with endpoint examples
 - Fully responsive design (mobile-first)
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Remove code from API Reference section, fix buggy emotion detection
+
+Work Log:
+- Read full page.tsx (1165 lines) and identified API Reference section (lines 1080-1145) containing JSON code blocks in pre tags
+- Replaced pre code blocks with structured bullet-point explanations for Request Body and Response Fields
+- Analyzed emotion detection in /api/sentiment/route.ts and identified 6 bugs:
+  1. Missing emotion keywords (amazing, wonderful, outstanding etc. not mapped)
+  2. No sentiment-aware fallback (defaulted to "neutral" when no keywords matched)
+  3. No negation handling ("not happy" still counted as joy)
+  4. Generic words in anticipation ("forward", "looking", "expected")
+  5. Raw count scoring without intensity weighting
+  6. Ternary syntax bugs on lines 25 and 28
+- Fixed ternary bugs on lines 25 and 28
+- Expanded emotion keyword lists (joy: +25 words, sadness: +14, fear: +9, etc.)
+- Rewrote EMOTION_KEYWORDS to use weighted structure
+- Rewrote detectEmotions() with negation handling, intensifiers, sentiment-based fallback
+- Updated API call to pass sentiment label to detectEmotions
+- Ran lint: 0 errors, tested with positive/negative/neutral texts
+
+Stage Summary:
+- API Reference section: code blocks replaced with bullet-point explanations
+- Emotion detection: fully rewritten with expanded keywords, negation handling, weighted scoring, sentiment-aware fallback
+- All lint checks pass, dev server running correctly
