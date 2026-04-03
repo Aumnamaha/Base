@@ -35,7 +35,6 @@ import {
   Info,
   TrendingUp,
   BarChart3,
-  Code2,
   Eye,
   CheckCircle2,
   XCircle,
@@ -154,118 +153,6 @@ const chartConfig = {
   negative: { label: "Negative", color: "#ef4444" },
   neutral: { label: "Neutral", color: "#f59e0b" },
 };
-
-// ─────────────────────────────────────
-// Optimized Python Backend Code
-// ─────────────────────────────────────
-const PYTHON_BACKEND_CODE = `"""
-SentimentIQ — Optimized Python Backend
-Using DistilBERT with FastAPI for production deployment.
-"""
-
-import torch
-import hashlib
-from functools import lru_cache
-from typing import Optional
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import time
-
-
-class AnalysisRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=5000,
-                      description="Text to analyze")
-    analysis_type: str = Field(default="sentiment",
-                               description="sentiment|emotion|keywords|toxicity|all")
-
-
-class SentimentBackend:
-    """Optimized sentiment analysis with DistilBERT."""
-
-    def __init__(self, model_path: Optional[str] = None):
-        base_model = "distilbert-base-uncased-finetuned-sst-2-english"
-
-        if model_path:
-            print(f"Loading fine-tuned model from {model_path}...")
-            self.model = AutoModelForSequenceClassification.from_pretrained(
-                model_path, torch_dtype=torch.float16  # FP16 for speed
-            )
-        else:
-            self.model = AutoModelForSequenceClassification.from_pretrained(
-                base_model, torch_dtype=torch.float16
-            )
-
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model)
-        self.model.eval()
-        self.labels = {0: "Negative", 1: "Positive"}
-
-        # Enable inference optimizations
-        torch.set_num_threads(4)
-
-    @lru_cache(maxsize=1024)
-    def _get_cached_result(self, text_hash: str) -> dict:
-        return {}  # Cache miss sentinel
-
-    def analyze(self, text: str) -> dict:
-        text_hash = hashlib.md5(text.encode()).hexdigest()
-        cached = self._get_cached_result(text_hash)
-        if cached:
-            return cached
-
-        inputs = self.tokenizer(
-            text, return_tensors="pt",
-            truncation=True, max_length=512,
-            padding="max_length"
-        )
-
-        with torch.no_grad():
-            outputs = self.model(**inputs)
-
-        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-        prediction = torch.argmax(probs, dim=-1).item()
-        confidence = float(probs[0][prediction])
-
-        result = {
-            "label": self.labels[prediction],
-            "confidence": round(confidence, 4),
-            "scores": {
-                "positive": round(float(probs[0][1]), 4),
-                "negative": round(float(probs[0][0]), 4),
-            }
-        }
-
-        return result
-
-
-# ── FastAPI App ──────────────────────────────
-backend = SentimentBackend()
-
-app = FastAPI(
-    title="SentimentIQ API",
-    version="2.0.0",
-    description="Production sentiment analysis endpoint"
-)
-
-
-@app.post("/sentiment")
-async def analyze_sentiment(request: AnalysisRequest):
-    start = time.perf_counter()
-
-    if len(request.text.strip()) == 0:
-        raise HTTPException(400, "Text cannot be empty")
-
-    result = backend.analyze(request.text)
-    result["processing_time_ms"] = round(
-        (time.perf_counter() - start) * 1000, 2
-    )
-    return result
-
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "model_loaded": True}`;
 
 // ─────────────────────────────────────
 // Main App Component
@@ -1031,65 +918,159 @@ export default function SentimentIQ() {
           </div>
         </section>
 
-        {/* ── Backend Code Section ── */}
+        {/* ── Backend Architecture ── */}
         <section className="space-y-6">
           <div className="flex items-center gap-2">
             <ChevronRight className="h-5 w-5 text-primary" />
-            <h3 className="text-xl font-bold">Production Backend (Python)</h3>
+            <h3 className="text-xl font-bold">How the Backend Works</h3>
           </div>
 
-          <Card className="glass-card overflow-hidden">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Model Loading */}
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
-                  <Code2 className="h-4 w-4 text-muted-foreground" />
-                  <CardTitle className="text-sm">Optimized Python Backend</CardTitle>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs border-emerald-500/30 text-emerald-400">
-                    <Server className="h-3 w-3 mr-1" />
-                    FastAPI
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    Python 3.11+
-                  </Badge>
-                </div>
-              </div>
-              <CardDescription className="text-xs">
-                Optimized for production with FP16 inference, LRU caching, and async FastAPI endpoints.
-                Deploy this backend alongside this frontend for real DistilBERT analysis.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <pre className="text-xs sm:text-sm bg-black/40 rounded-lg p-4 overflow-x-auto max-h-[500px] overflow-y-auto leading-relaxed font-mono">
-                  <code className="text-muted-foreground whitespace-pre">{PYTHON_BACKEND_CODE}</code>
-                </pre>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 text-xs"
-                  onClick={() => navigator.clipboard.writeText(PYTHON_BACKEND_CODE)}
-                >
-                  Copy
-                </Button>
-              </div>
-
-              {/* Optimization tips */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { icon: Gauge, title: "FP16 Precision", desc: "2× faster inference with float16" },
-                  { icon: Hash, title: "LRU Cache", desc: "1024-entry cache for repeated texts" },
-                  { icon: Cpu, title: "Thread Control", desc: "Optimized CPU thread allocation" },
-                  { icon: Server, title: "Async FastAPI", desc: "Non-blocking concurrent requests" },
-                ].map(({ icon: Icon, title, desc }) => (
-                  <div key={title} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/30">
-                    <Icon className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
-                    <div>
-                      <div className="text-xs font-medium">{title}</div>
-                      <div className="text-[11px] text-muted-foreground">{desc}</div>
-                    </div>
+                  <div className="h-8 w-8 rounded-md bg-emerald-500/10 flex items-center justify-center">
+                    <Cpu className="h-4 w-4 text-emerald-400" />
                   </div>
+                  <CardTitle className="text-sm">Model Loading</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Loads <strong className="text-foreground">DistilBERT</strong> (distilbert-base-uncased-finetuned-sst-2-english) at startup</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Supports custom fine-tuned checkpoints via <code className="text-foreground bg-muted px-1 rounded">model_path</code> parameter</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Uses <strong className="text-foreground">FP16 (float16)</strong> precision for 2x faster inference</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Model set to eval mode — no gradient computation overhead</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Text Processing */}
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-md bg-cyan-500/10 flex items-center justify-center">
+                    <Gauge className="h-4 w-4 text-cyan-400" />
+                  </div>
+                  <CardTitle className="text-sm">Text Processing</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Tokenizer converts input text to tensor format with <strong className="text-foreground">max 512 tokens</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Text is truncated and padded to fixed length for batch processing</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span><strong className="text-foreground">LRU Cache</strong> (1024 entries) avoids reprocessing identical text inputs</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>MD5 hash used as cache key for fast deduplication</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Sentiment Analysis */}
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-md bg-amber-500/10 flex items-center justify-center">
+                    <Heart className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <CardTitle className="text-sm">Sentiment & Emotion</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Model outputs logits processed through <strong className="text-foreground">softmax</strong> for probability scores</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Argmax selects <strong className="text-foreground">Positive</strong> or <strong className="text-foreground">Negative</strong> label with confidence percentage</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Emotion detection uses weighted keyword matching across 8 emotion categories</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Handles <strong className="text-foreground">negation</strong> ("not good" = negative) and <strong className="text-foreground">intensifiers</strong> ("very good" = higher score)</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* API Server */}
+            <Card className="glass-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-md bg-rose-500/10 flex items-center justify-center">
+                    <Server className="h-4 w-4 text-rose-400" />
+                  </div>
+                  <CardTitle className="text-sm">API Server</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Built with <strong className="text-foreground">FastAPI</strong> — async, auto-documenting, high-performance</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span>Pydantic validates input — <code className="text-foreground bg-muted px-1 rounded">text</code> (1–5000 chars) and <code className="text-foreground bg-muted px-1 rounded">analysis_type</code></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span><strong className="text-foreground">POST /sentiment</strong> — main analysis endpoint, returns JSON with scores & metadata</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-rose-400 mt-0.5 shrink-0">&#9679;</span>
+                    <span><strong className="text-foreground">GET /health</strong> — health check endpoint for monitoring</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tech Stack Bar */}
+          <Card className="glass-card">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                {[
+                  { label: "Python 3.11+" },
+                  { label: "PyTorch" },
+                  { label: "Transformers" },
+                  { label: "DistilBERT" },
+                  { label: "FastAPI" },
+                  { label: "Pydantic" },
+                  { label: "Uvicorn" },
+                ].map((tech) => (
+                  <Badge key={tech.label} variant="outline" className="text-xs">
+                    {tech.label}
+                  </Badge>
                 ))}
               </div>
             </CardContent>
