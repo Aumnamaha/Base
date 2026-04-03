@@ -24,9 +24,30 @@ Work Log:
   - Sticky footer with branding
 - All ESLint checks pass
 
+---
+Task ID: 2
+Agent: Main Agent
+Task: Add download options for analysis results and complete project ZIP
+
+Work Log:
+- Added download dropdown in results section (JSON, TXT report, CSV history)
+- Created `/api/download` API route that generates a ZIP file using jszip
+- ZIP contains complete self-hostable project:
+  - `backend/app.py` — Full FastAPI + DistilBERT backend with all 5 analysis types
+  - `backend/requirements.txt` — Python dependencies
+  - `frontend/index.html` — Standalone dark-themed HTML/CSS/JS frontend (zero deps)
+  - `README.md` — Setup instructions with API docs
+- Added "Download Project" button in header (sticky, always visible)
+- Added prominent "Download Complete Project" card in backend code section
+- Verified download endpoint returns valid 36KB ZIP
+
 Stage Summary:
-- Production-ready sentiment analysis website
-- Eye-comfort dark theme with warm tones (not harsh black/white)
+- 3 result download formats: JSON, formatted TXT report, CSV history
+- 1-click project ZIP download with full self-hostable code
+- Header download button + dedicated download card section
+- All lint checks pass, dev server compiling correctly
+
+Stage Summary:
 - 5 analysis modes: sentiment, emotion, keywords, toxicity, all
 - Real-time charts (PieChart for distribution, BarChart for emotions)
 - Analysis history with clearing capability

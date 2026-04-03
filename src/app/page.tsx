@@ -464,6 +464,10 @@ export default function SentimentIQ() {
     downloadFile([header, ...rows].join("\n"), `sentiment-history-${Date.now()}.csv`, "text/csv");
   }, [history, downloadFile]);
 
+  const downloadProject = useCallback(() => {
+    window.open("/api/download", "_blank");
+  }, []);
+
   const sentiment = result?.results?.sentiment;
   const getSentimentIcon = (label: string) => {
     if (label === "Positive") return <CheckCircle2 className="h-6 w-6 text-emerald-400" />;
@@ -504,6 +508,16 @@ export default function SentimentIQ() {
               <Activity className="h-3 w-3 mr-1" />
               Live
             </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadProject}
+              className="gap-1.5 text-xs bg-emerald-600/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-600/20 hover:text-emerald-300"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Download Project</span>
+              <span className="sm:hidden">ZIP</span>
+            </Button>
           </div>
         </div>
       </header>
@@ -1170,6 +1184,46 @@ export default function SentimentIQ() {
             <ChevronRight className="h-5 w-5 text-primary" />
             <h3 className="text-xl font-bold">Production Backend (Python)</h3>
           </div>
+
+          {/* Download Project Card */}
+          <Card className="glass-card overflow-hidden border-emerald-500/20">
+            <CardContent className="py-5">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 flex items-center justify-center border border-emerald-500/30">
+                    <Download className="h-6 w-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Download Complete Project</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Python backend + HTML frontend + README &mdash; ready to run
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={downloadProject}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download ZIP
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-border/30">
+                {[
+                  { label: "backend/app.py", desc: "FastAPI + DistilBERT" },
+                  { label: "backend/requirements.txt", desc: "Python deps" },
+                  { label: "frontend/index.html", desc: "Standalone UI" },
+                  { label: "README.md", desc: "Setup guide" },
+                ].map((f) => (
+                  <div key={f.label} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <FileText className="h-3 w-3" />
+                    <span className="font-mono">{f.label}</span>
+                    <span>&middot; {f.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card className="glass-card overflow-hidden">
             <CardHeader className="pb-3">
