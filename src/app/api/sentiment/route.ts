@@ -183,7 +183,7 @@ function analyzeSentiment(text: string) {
   if (total === 0) {
     // Neutral by default when no sentiment words found
     label = "Neutral";
-    confidence = 0.55 + Math.random() * 0.15;
+    confidence = 0.6;
   } else if (positiveScore > negativeScore) {
     label = "Positive";
     confidence = Math.min(0.99, 0.5 + (positiveScore / total) * 0.49);
@@ -192,7 +192,7 @@ function analyzeSentiment(text: string) {
     confidence = Math.min(0.99, 0.5 + (negativeScore / total) * 0.49);
   } else {
     label = "Neutral";
-    confidence = 0.5 + Math.random() * 0.1;
+    confidence = 0.55;
   }
 
   return {
@@ -250,9 +250,7 @@ function detectEmotions(text: string, sentimentLabel: string): { dominant: strin
       emotionScores.sadness = 0.7;
       emotionScores.anger = 0.5;
     } else {
-      emotionScores.joy = 0.4;
-      emotionScores.trust = 0.3;
-      emotionScores.sadness = 0.3;
+      emotionScores.neutral = 1.0;
     }
   }
 
@@ -268,7 +266,7 @@ function detectEmotions(text: string, sentimentLabel: string): { dominant: strin
   };
 }
 
-function extractKeywords(text: string): string[] {
+function extractKeywords(text: string): { word: string; frequency: number }[] {
   const stopWords = new Set([
     "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
     "have", "has", "had", "do", "does", "did", "will", "would", "could",
@@ -349,7 +347,7 @@ export async function POST(request: NextRequest) {
     }
 
     const startTime = Date.now();
-    const results: Record<string, unknown> = {};
+    const results: any = {};
 
     // Sentiment Analysis (always)
     results.sentiment = analyzeSentiment(text);
@@ -383,7 +381,8 @@ export async function POST(request: NextRequest) {
         model: "DistilBERT-finetuned-SST-2 (simulated)",
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("Sentiment API error:", error);
     return NextResponse.json(
       { error: "Internal server error. Please try again." },
       { status: 500 }
