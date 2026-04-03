@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SentimentIQ — AI Sentiment Analysis Platform",
+  title: "SentimentIQ | Clean text intelligence",
   description:
-    "Advanced AI-powered sentiment analysis tool. Analyze text for positive, negative, and neutral sentiment with emotion detection and keyword extraction.",
+    "A sharp, modern sentiment analysis interface for tone, emotion, keywords, and toxicity checks.",
   keywords: [
     "sentiment analysis",
     "NLP",
@@ -27,9 +27,6 @@ export const metadata: Metadata = {
     "emotion detection",
   ],
   authors: [{ name: "SentimentIQ" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
 };
 
 export default function RootLayout({

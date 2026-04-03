@@ -59,6 +59,7 @@ const NEGATIVE_WORDS = new Map([
   ["scam", 2], ["fraud", 2], ["fake", 1.5], ["counterfeit", 2], ["defective", 1.5],
   ["malfunction", 2], ["glitch", 1], ["bugs", 1], ["bug", 1], ["slow", 1],
   ["laggy", 1.5], ["crash", 2], ["crashed", 2], ["freezing", 1.5], ["frozen", 1.5],
+  ["kill", 2], ["murder", 2], ["destroy", 2], ["death", 2], ["die", 2], ["dead", 2],
 ]);
 
 const NEGATION_WORDS = new Set([
@@ -109,6 +110,10 @@ const EMOTION_KEYWORDS: Record<string, { words: Set<string>; weight: number }> =
     words: new Set(["anticipation", "eager", "hopeful", "optimistic", "impatient", "awaiting", "upcoming", "soon", "ready", "prepared", "planning", "countdown"]),
     weight: 0.7,
   },
+  malice: {
+    words: new Set(["kill", "murder", "destroy", "annihilate", "assassinate", "smash", "crush", "slaughter", "massacre", "eliminate", "execute", "strangle", "stab", "shoot", "attack", "die", "death", "blood", "bleed", "vengeance", "revenge", "harm", "hurt", "threat", "threaten", "suffer", "torture", "poison"]),
+    weight: 2.0,
+  },
 };
 
 const TOXIC_PATTERNS = [
@@ -116,6 +121,10 @@ const TOXIC_PATTERNS = [
   /\bbastard/i, /\bidiot/i, /\bstupid/i, /\bdumb/i, /\bmoron/i,
   /\bretard/i, /\bhell/i, /\bscrew\s+you/i, /\bkys/i,
   /kill\s+yourself/i, /\bhate\s+you/i, /\bworthless\s+piece/i,
+  /\bkill\b/i, /\bmurder\b/i, /\bdestroy\b/i, /\bdie\b/i, /\bthreat\b/i, /\bburn\b/i,
+  /\bgo\s+to\s+hell\b/i, /\bi\s+will\s+find\s+you\b/i, /\bwatch\s+your\s+back\b/i,
+  /\bslut\b/i, /\bwhore\b/i, /\bcunt\b/i, /\bfaggot\b/i, /\bnigger\b/i,
+  /\bchoke\b/i, /\bstrangle\b/i, /\bshoot\s+you\b/i, /\bstab\b/i
 ];
 
 // ─────────────────────────────────────────────
@@ -318,7 +327,7 @@ function checkToxicity(text: string): { isToxic: boolean; score: number; flags: 
   }
 
   return {
-    isToxic: score > 0.25,
+    isToxic: score >= 0.25,
     score: Math.min(1, Math.round(score * 100) / 100),
     flags,
   };
