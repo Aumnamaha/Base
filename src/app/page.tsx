@@ -509,10 +509,27 @@ export default function SentimentDashboard() {
                 Drop in a message, choose what to inspect, and get a clear read on tone,
                 emotion, keywords, and toxicity without the clutter.
               </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Signal", value: "Realtime" },
+                  { label: "Style", value: "Holographic" },
+                  { label: "Safety", value: "Always on" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  >
+                    <div className="text-[10px] uppercase tracking-[0.35em] text-slate-500">
+                      {item.label}
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-white">{item.value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="grid gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:min-w-[260px]">
+          <div className="grid gap-2 rounded-[1.5rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 via-white/[0.04] to-emerald-300/10 p-4 backdrop-blur-xl sm:min-w-[280px]">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
               <span>System</span>
               <span className="text-emerald-300">Ready</span>
@@ -529,12 +546,16 @@ export default function SentimentDashboard() {
               <Zap className="h-4 w-4 text-amber-300" />
               Responsive UI
             </div>
+            <div className="mt-2 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+              <div className="text-[10px] uppercase tracking-[0.35em] text-slate-500">Status</div>
+              <div className="mt-1 text-sm text-slate-200">Kinetic interface online</div>
+            </div>
           </div>
         </header>
 
         <section className="mt-8 grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="tilt-shell tilt-left">
-          <Card className="section-panel floating-card border-white/10 bg-slate-950/70 shadow-[0_18px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+          <Card className="section-panel floating-card border border-cyan-400/20 bg-slate-950/70 shadow-[0_18px_80px_rgba(2,6,23,0.55)] backdrop-blur-xl">
             <div className="border-b border-white/10 px-6 py-5 sm:px-8">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
@@ -566,6 +587,16 @@ export default function SentimentDashboard() {
                 <Badge variant="outline" className="border-white/10 text-slate-300">
                   {mode}
                 </Badge>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-slate-500">
+                  <span>Command rail</span>
+                  <span>{loading ? "Scanning" : "Idle"}</span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5">
+                  <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-cyan-400 via-emerald-300 to-amber-300 shadow-[0_0_18px_rgba(103,232,249,0.25)]" />
+                </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -700,9 +731,9 @@ export default function SentimentDashboard() {
 
         <div ref={resultsRef} className="mt-6 scroll-mt-8">
           {result ? (
-            <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <section className="grid min-w-0 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
               <div className="tilt-shell tilt-left">
-              <Card className="section-result-main floating-card float-delay-1 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+              <Card className="section-result-main floating-card float-delay-1 w-full min-w-0 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
                 <div className="border-b border-white/10 px-6 py-5 sm:px-8">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -722,7 +753,7 @@ export default function SentimentDashboard() {
                   {sentiment ? (
                     <>
                       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                        <div className="min-w-0 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                           <div className="text-xs uppercase tracking-[0.35em] text-slate-500">Label</div>
                           <div
                             className={`mt-4 bg-gradient-to-r ${sentimentGlow} bg-clip-text text-4xl font-black uppercase tracking-tight text-transparent sm:text-5xl`}
@@ -738,7 +769,7 @@ export default function SentimentDashboard() {
                           </div>
                         </div>
 
-                        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                        <div className="min-w-0 space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                           <StatBar
                             label="Positive weight"
                             value={sentiment.scores.positive}
@@ -749,14 +780,16 @@ export default function SentimentDashboard() {
                             value={sentiment.scores.negative}
                             tone="rose"
                           />
-                          <div className="grid grid-cols-2 gap-3 pt-2 text-xs uppercase tracking-[0.3em] text-slate-500">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                          <div className="grid min-w-0 grid-cols-2 gap-3 pt-2 text-xs uppercase tracking-[0.3em] text-slate-500">
+                            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-3">
                               <div className="text-slate-400">Processing</div>
-                              <div className="mt-1 text-sm text-white">{result.metadata.processingTime}</div>
+                              <div className="mt-1 break-words text-sm leading-5 text-white">{result.metadata.processingTime}</div>
                             </div>
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+                            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-3">
                               <div className="text-slate-400">Model</div>
-                              <div className="mt-1 text-sm text-white">{result.metadata.model}</div>
+                              <div className="mt-1 break-words text-sm leading-5 text-white">
+                                {result.metadata.model}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -771,9 +804,9 @@ export default function SentimentDashboard() {
               </Card>
               </div>
 
-              <div className="grid gap-6">
+              <div className="grid min-w-0 gap-6">
                 <div className="tilt-shell tilt-right">
-                <Card className="section-result-emotion floating-card float-delay-2 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+                <Card className="section-result-emotion floating-card float-delay-2 w-full min-w-0 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
                   <div className="border-b border-white/10 px-6 py-5">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-slate-500">
                       <Sparkles className="h-4 w-4 text-cyan-300" />
@@ -783,15 +816,15 @@ export default function SentimentDashboard() {
                   <div className="px-6 py-5">
                     {emotion ? (
                       <>
-                        <div className="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                        <div className="flex min-w-0 items-start gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                           <div className="text-4xl">
                             {EMOTION_ICONS[emotion.dominant] ?? "◌"}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-2xl font-semibold capitalize text-white">
                               {emotion.dominant}
                             </div>
-                            <p className="mt-1 text-sm text-slate-400">
+                            <p className="mt-1 break-words text-sm text-slate-400">
                               Dominant emotion and normalized distribution.
                             </p>
                           </div>
@@ -820,15 +853,15 @@ export default function SentimentDashboard() {
                 </div>
 
                 <div className="tilt-shell tilt-left">
-                <Card className="section-result-safety floating-card float-delay-3 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
+                <Card className="section-result-safety floating-card float-delay-3 w-full min-w-0 border-white/10 bg-slate-950/70 shadow-[0_24px_90px_rgba(2,6,23,0.55)] backdrop-blur-xl">
                   <div className="border-b border-white/10 px-6 py-5">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-slate-500">
                       <Flame className="h-4 w-4 text-rose-300" />
                       Safety and keywords
                     </div>
                   </div>
-                  <div className="grid gap-4 px-6 py-5 sm:grid-cols-2">
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                  <div className="grid min-w-0 gap-4 px-6 py-5 sm:grid-cols-2">
+                    <div className="min-w-0 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                       <div className="text-sm font-medium text-white">Toxicity</div>
                       {toxicity ? (
                         <div className="mt-4 space-y-3">
@@ -844,7 +877,7 @@ export default function SentimentDashboard() {
                           {toxicity.flags.length > 0 && (
                             <div className="space-y-2 pt-1 text-sm text-slate-400">
                               {toxicity.flags.slice(0, 2).map((flag) => (
-                                <div key={flag} className="rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
+                                <div key={flag} className="break-words rounded-2xl border border-white/10 bg-black/20 px-3 py-2 leading-5">
                                   {flag}
                                 </div>
                               ))}
@@ -856,17 +889,17 @@ export default function SentimentDashboard() {
                       )}
                     </div>
 
-                    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                    <div className="min-w-0 rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                       <div className="text-sm font-medium text-white">Keywords</div>
                       {keywords.length > 0 ? (
-                        <div className="mt-4 flex flex-wrap gap-2">
+                        <div className="mt-4 flex min-w-0 flex-wrap gap-2">
                           {keywords.slice(0, 5).map((keyword) => (
                             <span
                               key={keyword.word}
-                              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-200"
+                              className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-slate-200"
                             >
                               <Hash className="h-3.5 w-3.5 text-cyan-300" />
-                              {keyword.word}
+                              <span className="max-w-[8rem] break-words leading-4">{keyword.word}</span>
                               <span className="font-mono text-slate-500">x{keyword.frequency}</span>
                             </span>
                           ))}
@@ -882,7 +915,7 @@ export default function SentimentDashboard() {
             </section>
           ) : (
             <div className="tilt-shell tilt-right">
-            <Card className="section-empty floating-card border-dashed border-white/10 bg-slate-950/30 py-12 text-center shadow-[0_24px_90px_rgba(2,6,23,0.28)] backdrop-blur-xl">
+            <Card className="section-empty floating-card w-full min-w-0 border-dashed border-white/10 bg-slate-950/30 py-12 text-center shadow-[0_24px_90px_rgba(2,6,23,0.28)] backdrop-blur-xl">
               <div className="mx-auto flex max-w-xl flex-col items-center px-6">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
                   <Activity className="h-6 w-6 text-cyan-200" />
@@ -899,7 +932,7 @@ export default function SentimentDashboard() {
 
         <section className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="tilt-shell tilt-left">
-          <Card className="section-step-one floating-card border-white/10 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
+          <Card className="section-step-one floating-card border border-cyan-400/15 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
             <div className="px-6 py-5">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-slate-500">
                 <Activity className="h-4 w-4 text-cyan-300" />
@@ -915,7 +948,7 @@ export default function SentimentDashboard() {
           </div>
 
           <div className="tilt-shell tilt-right">
-          <Card className="section-step-two floating-card float-delay-1 border-white/10 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
+          <Card className="section-step-two floating-card float-delay-1 border border-emerald-400/15 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
             <div className="px-6 py-5">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-slate-500">
                 <TrendingUp className="h-4 w-4 text-emerald-300" />
@@ -931,7 +964,7 @@ export default function SentimentDashboard() {
           </div>
 
           <div className="tilt-shell tilt-left">
-          <Card className="section-step-three floating-card float-delay-2 border-white/10 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
+          <Card className="section-step-three floating-card float-delay-2 border border-amber-400/15 bg-slate-950/55 shadow-[0_18px_70px_rgba(2,6,23,0.4)] backdrop-blur-xl">
             <div className="px-6 py-5">
               <div className="flex items-center gap-2 text-xs uppercase tracking-[0.35em] text-slate-500">
                 <ShieldCheck className="h-4 w-4 text-amber-300" />
