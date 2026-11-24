@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -36,6 +37,26 @@ def transcribe_calls(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, object]]
 
 def _upload(content_type: str = "audio/wav", filename: str = "sample.wav") -> dict:
     return {"file": (filename, io.BytesIO(b"RIFFfake"), content_type)}
+
+
+def test_health_endpoint(client: TestClient) -> None:
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+    assert response.json()["model"] == api.settings.model_id
+
+
+def test_oversized_upload_is_rejected(client: TestClient, monkeypatch) -> None:
+    monkeypatch.setattr(api, "settings", replace(api.settings, max_upload_mb=1))
+    oversized = io.BytesIO(b"x" * (1024 * 1024 + 1))
+
+    response = client.post(
+        "/transcribe", files={"file": ("big.wav", oversized, "audio/wav")}
+    )
+
+    assert response.status_code == 413
+    assert "exceeds" in response.json()["detail"]
 
 
 def test_transcribe_returns_text_and_removes_temp_file(

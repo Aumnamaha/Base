@@ -28,14 +28,25 @@ class FakeFeatureExtractor:
 
 
 class FakeTokenizer:
-    def __call__(self, text: str) -> Any:
+    bos_token_id = 90
+    eos_token_id = 99
+
+    def __call__(self, text: str, add_special_tokens: bool = True) -> Any:
         # HF BatchEncoding supports both attribute and key access.
-        return types.SimpleNamespace(input_ids=[1, 2, 3])
+        return types.SimpleNamespace(input_ids=[10, 11])
 
 
 class FakeProcessor:
     feature_extractor = FakeFeatureExtractor()
     tokenizer = FakeTokenizer()
+
+    @staticmethod
+    def get_decoder_prompt_ids(language: str, task: str):
+        return [
+            (90, "<|startoftranscript|>"),
+            (91, "<|hi|>"),
+            (92, "<|transcribe|>"),
+        ]
 
 
 @pytest.fixture
@@ -77,7 +88,7 @@ def test_prepare_dataset_does_not_request_remote_code(fake_hf: Dict[str, Any]) -
     assert "trust_remote_code" not in fake_hf["kwargs"]
     assert len(data) == 1
     assert data[0]["reference_text"] == "नमस्ते"
-    assert data[0]["labels"] == [1, 2, 3]
+    assert data[0]["labels"] == [90, 91, 92, 10, 11, 99]
     assert isinstance(processor, FakeProcessor)
 
 

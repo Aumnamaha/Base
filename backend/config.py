@@ -58,6 +58,17 @@ class Settings:
         )
     )
     max_steps: int = field(default_factory=lambda: int(os.getenv("NEUVOICE_MAX_STEPS", "20")))
+    max_upload_mb: int = field(
+        default_factory=lambda: int(os.getenv("NEUVOICE_MAX_UPLOAD_MB", "100"))
+    )
+    log_level: str = field(
+        default_factory=lambda: os.getenv("NEUVOICE_LOG_LEVEL", "INFO").upper()
+    )
+
+    @property
+    def max_upload_bytes(self) -> int:
+        """Maximum accepted upload size in bytes."""
+        return self.max_upload_mb * 1024 * 1024
 
     @staticmethod
     def is_supported_language(language: str) -> bool:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
@@ -14,6 +13,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from src.pipeline.infer import transcribe_audio
 
+logging.basicConfig(
+    level=settings.log_level,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="NeuroVoice Speech-to-Text API")
@@ -27,6 +30,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health() -> dict:
+    """Lightweight readiness probe; does not load the model."""
+    return {"status": "ok", "model": settings.model_id}
 
 
 def _upload_suffix(filename: Optional[str]) -> str:
@@ -62,10 +71,20 @@ async def transcribe_endpoint(
             delete=False,
         ) as temp_file:
             temp_path = Path(temp_file.name)
-            shutil.copyfileobj(file.file, temp_file)
+            total = 0
+            while chunk := file.file.read(1024 * 1024):
+                total += len(chunk)
+                if total > settings.max_upload_bytes:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File exceeds {settings.max_upload_mb} MB limit",
+                    )
+                temp_file.write(chunk)
 
         text = transcribe_audio(str(temp_path), model_id=settings.model_id, language=lang_arg)
         return {"text": text, "language": language}
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("Transcription failed for uploaded file %s", file.filename)
         raise HTTPException(status_code=500, detail="Transcription failed") from exc
