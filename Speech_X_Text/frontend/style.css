@@ -387,6 +387,7 @@ select:focus {
     line-height: 1.7;
     color: #e2e8f0;
     min-height: 60px;
+    white-space: pre-wrap;
 }
 
 .hidden {

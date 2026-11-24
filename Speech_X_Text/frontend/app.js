@@ -9,12 +9,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyBtn = document.getElementById("copy-btn");
 
     let selectedFile = null;
-    
-    // NOTE: This URL will need to be updated to your Render/HuggingFace deployment URL 
-    // once the backend is deployed. For local testing, it connects to localhost.
-    const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-        ? "http://127.0.0.1:8000/transcribe" 
-        : "https://base-pd3b.onrender.com/transcribe";
+
+    // Local development (including opening index.html directly) targets localhost.
+    // Deployed frontends must set window.NEUVOICE_API_URL before this script loads.
+    const isLocal =
+        window.location.protocol === "file:" ||
+        ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+    const API_URL =
+        window.NEUVOICE_API_URL ||
+        (isLocal ? "http://127.0.0.1:8000/transcribe" : "");
 
     // Handle Drag & Drop
     dropZone.addEventListener("dragover", (e) => {
@@ -36,12 +39,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Handle Click Upload
     dropZone.addEventListener("click", () => fileInput.click());
-    
+
     fileInput.addEventListener("change", (e) => {
         if (e.target.files.length) {
             handleFileSelect(e.target.files[0]);
         }
     });
+
+    function renderSelectedFile(file) {
+        // Keep the hidden file input in the DOM; replace only the prompt elements.
+        Array.from(dropZone.children).forEach((child) => {
+            if (child !== fileInput) child.remove();
+        });
+
+        const icon = document.createElement("i");
+        icon.dataset.lucide = "file-audio";
+        icon.className = "upload-icon";
+        icon.style.color = "var(--accent)";
+
+        const heading = document.createElement("h2");
+        heading.textContent = file.name;
+        heading.style.color = "white";
+        heading.style.fontSize = "1.2rem";
+
+        const change = document.createElement("p");
+        change.className = "text-accent";
+        change.textContent = "Change File";
+        change.style.cursor = "pointer";
+        change.addEventListener("click", (event) => {
+            event.stopPropagation();
+            fileInput.click();
+        });
+
+        dropZone.append(icon, heading, change);
+        lucide.createIcons();
+    }
 
     function handleFileSelect(file) {
         if (!file.type.startsWith("audio/")) {
@@ -49,20 +81,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         selectedFile = file;
-        
-        // Update UI to show selected file
-        dropZone.innerHTML = `
-            <i data-lucide="file-audio" class="upload-icon" style="color:var(--accent)"></i>
-            <h2 style="color:white; font-size: 1.2rem;">${file.name}</h2>
-            <p class="text-accent" style="cursor:pointer" onclick="document.getElementById('audio-upload').click(); event.stopPropagation();">Change File</p>
-        `;
-        lucide.createIcons();
+        renderSelectedFile(file);
         transcribeBtn.disabled = false;
     }
 
     // Handle Transcription Request
     transcribeBtn.addEventListener("click", async () => {
         if (!selectedFile) return;
+
+        if (!API_URL) {
+            alert(
+                "Backend URL is not configured. Set window.NEUVOICE_API_URL before app.js loads."
+            );
+            return;
+        }
 
         // UI Reset
         resultBox.classList.add("hidden");
@@ -76,17 +108,18 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                body: formData
+                body: formData,
             });
 
-            if (!response.ok) throw new Error("Transcription server failed. Make sure backend is running.");
+            if (!response.ok) {
+                throw new Error("Transcription server failed. Make sure backend is running.");
+            }
 
             const data = await response.json();
-            
-            // Show Result
-            transcriptionText.innerHTML = data.text.replace(/\n/g, "<br>");
+
+            // textContent avoids interpreting transcribed text as HTML.
+            transcriptionText.textContent = data.text;
             resultBox.classList.remove("hidden");
-            
         } catch (error) {
             alert(error.message);
             console.error(error);

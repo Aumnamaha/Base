@@ -26,7 +26,7 @@
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#demo">Live Demo</a>
-                <a href="https://github.com/yourusername/speech-x-text" target="_blank" class="nav-btn">
+                <a href="https://github.com/Aumnamaha/Base" target="_blank" rel="noopener noreferrer" class="nav-btn">
                     <i data-lucide="github"></i> GitHub
                 </a>
             </div>
@@ -35,9 +35,9 @@
 
     <!-- Hero Section -->
     <header class="hero">
-        <div class="badge">🚀 Fully Client-End-Side Processing</div>
+        <div class="badge">🚀 Multilingual Whisper, deployed your way</div>
         <h1 class="hero-title">Multilingual Speech Intelligence. <br><span class="text-gradient">Done Right.</span></h1>
-        <p class="hero-subtitle">Transcribe English and native Indian languages with unparalleled accuracy using state-of-the-art AI. Private, fast, and entirely client-oriented.</p>
+        <p class="hero-subtitle">Transcribe English and native Indian languages with Whisper. Run the backend locally or point this UI at a service you control.</p>
         <a href="#demo" class="primary-btn hero-btn">
             Try it Now <i data-lucide="arrow-right"></i>
         </a>
@@ -98,8 +98,8 @@
         <div class="features-grid">
             <div class="feature-card glass-panel">
                 <div class="feature-icon"><i data-lucide="shield-check"></i></div>
-                <h3>Fully Client-End-Side</h3>
-                <p>100% of the speech parsing happens locally avoiding server trips. Ensure complete data privacy and security.</p>
+                <h3>Private by Design</h3>
+                <p>Audio is sent only to the FastAPI backend you configure. No third-party transcription service is involved.</p>
             </div>
             <div class="feature-card glass-panel">
                 <div class="feature-icon"><i data-lucide="languages"></i></div>
@@ -125,6 +125,8 @@
         </div>
     </footer>
 
+    <!-- Optional: set a deployed backend before app.js loads.
+         <script>window.NEUVOICE_API_URL = "https://your-backend.example/transcribe";</script> -->
     <script src="app.js"></script>
     <script>lucide.createIcons();</script>
 </body>

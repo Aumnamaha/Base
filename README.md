@@ -1,66 +1,96 @@
 # NeuroVoice Speech-to-Text 🎙️
 
-A beautiful, multilingual Speech-To-Text application powered by a fine-tuned OpenAI Whisper AI module. This project splits a heavy Python Machine Learning brain from a lightweight, lightning-fast web browser frontend.
+Multilingual Whisper transcription with a FastAPI backend and a zero-build vanilla JS frontend.
 
-## 🌟 Features
-- Modern UI: Full vanilla JS/HTML/CSS implementation featuring a stunning dark mode glassmorphism design.
-- FastAPI Backend: A highly advanced REST API connecting the frontend directly to PyTorch.
-- Multilingual: Supports seamless transcription across major global and regional languages.
-- Zero OS Dependencies: Custom injected `librosa` array mapping bypasses the standard Windows `FFMPEG` pipeline requirements natively!
+## Architecture
 
-## 🏗️ Project Architecture
-- `frontend/` - Contains everything needed for the Web UI. Deployed easily to Vercel.
-- `backend/` - Contains the Python AI logic, Uvicorn server, and ML model inference codes.
+- `Speech_X_Text/frontend/` — static UI (HTML/CSS/JS), deployable to Vercel.
+- `Speech_X_Text/backend/` — Python AI logic and HTTP API.
+  - `api.py` — `POST /transcribe` endpoint.
+  - `config.py` — environment-driven settings.
+  - `src/pipeline/infer.py` — cached Whisper ASR pipeline.
+  - `src/data/prepare_data.py` — Common Voice preprocessing.
+  - `scripts/train.py` — optional fine-tuning loop.
+  - `tests/` — hermetic unit tests plus opt-in integration tests; sample clips live in `tests/samples/`.
 
----
+Audio is transcribed by the backend you point the UI at. It is **not** processed inside the browser.
 
-## 🚀 Deployment Guide
+## Run locally
 
-### 1. Frontend (Vercel)
-Vercel is perfect for the HTML/JS frontend because it deploys instantly.
-1. Push this repository to your GitHub.
-2. Go to [Vercel.com](https://vercel.com/) and click Add New Project.
-3. Import your GitHub repository.
-4. CRITICAL SETTINGS:
-   - Root Directory: Click Edit, and perfectly type `frontend`
-   - Framework Preset: Set to Other
-   - Include files outside Root Directory...: Toggle this to OFF
-5. Click Save and Deploy!
-   
-### 2. Backend (Hosting the AI)
-⚠️ CRITICAL WARNING REGARDING RENDER.COM: 
-OpenAI's Whisper model requires approximately 1.5GB to 2GB of RAM to load into active memory. Render.com's FREE tier only gives you 512MB RAM. If you attempt to deploy this to Render's free tier, the invisible computer will completely run out of memory, freeze, and throw a "Port scan timeout reached" crash. 
-
-To host the backend publicly for free, you must use a dedicated AI cloud platform like Hugging Face Spaces (which provides 16GB free RAM), or use a paid tier.
-Start Command: `uvicorn api:app --host 0.0.0.0 --port 10000`
-
----
-
-## 💻 Running Locally (Highly Recommended)
-
-Because modern personal desktop computers and laptops have excellent CPU and RAM hardware, running the environment locally is the absolute best way to experience the project.
-
-### Step 1: Open Terminal & Activate Environment
-Open PowerShell or VS Code Terminal inside your project folder.
 ```bash
+cd Speech_X_Text/backend
 python -m venv .venv
-.venv\Scripts\activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+python api.py                      # starts http://127.0.0.1:8000
 ```
 
-### Step 2: Install the AI Brain
-Download the 2+ GB required to run PyTorch and HuggingFace locally:
+Then either double-click `Speech_X_Text/frontend/index.html`, or serve the folder:
+
 ```bash
-pip install -r requirements.txt
+cd Speech_X_Text/frontend
+python -m http.server 5500
 ```
 
-### Step 3: Start the Backend Server
-Wake up the FastAPI python server using your local environment.
+Both local modes automatically target `http://127.0.0.1:8000/transcribe`.
+
+## Configuration
+
+The backend reads environment variables directly; it does not auto-load `.env`. See `.env.example`
+for the full list. Useful defaults:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `NEUVOICE_HOST` | `0.0.0.0` | Bind address |
+| `NEUVOICE_PORT` | `8000` | Bind port |
+| `NEUVOICE_RELOAD` | `true` | Uvicorn auto-reload when running `python api.py` |
+| `NEUVOICE_MODEL_ID` | `openai/whisper-small` | Hugging Face model id |
+| `NEUVOICE_DEFAULT_LANGUAGE` | `en` | Default API language |
+| `NEUVOICE_TRAINING_LANGUAGE` | `hi` | Language used by data prep/training |
+| `NEUVOICE_ALLOWED_ORIGINS` | `*` | Comma-separated CORS allow-list (no credentials are used) |
+| `NEUVOICE_MAX_STEPS` | `20` | Training smoke-test length |
+
+For a deployed frontend, set the backend URL before `app.js` loads:
+
+```html
+<script>window.NEUVOICE_API_URL = "https://your-backend.example/transcribe";</script>
+<script src="app.js"></script>
+```
+
+## API
+
+`POST /transcribe` accepts multipart form data:
+
+- `file` — audio upload (`audio/*`).
+- `language` — one of `en`, `hi`, `bn`, `ta`, `te`, `mr`, or `auto`.
+
+Response: `{"text": "...", "language": "hi"}`. `"language"` echoes the requested value; `auto`
+lets Whisper detect the spoken language.
+
+## Tests and linting
+
 ```bash
-python backend/api.py
+cd Speech_X_Text/backend
+pytest
+ruff check .
 ```
-Wait until you see `Application startup complete` in your terminal!
 
-### Step 4: Open the Website!
-Since the website is pure HTML, you don't even need a web server! Just open your standard Windows File Explorer, navigate into the `frontend` folder, and double-click `index.html` to open it natively in Google Chrome or Edge. 
+Unit tests mock Hugging Face and PyTorch, so they need no model downloads. The original tests
+that hit Hugging Face and gated Common Voice data are opt-in:
 
-Drag and drop an audio file into the box, click transcribe, and the Javascript will automatically detect that you are running locally and route the audio directly into your waiting terminal for instant results!
+```bash
+NEUVOICE_RUN_INTEGRATION=1 pytest -m integration
+```
+
+You will need Hugging Face credentials with access to `mozilla-foundation/common_voice_11_0`.
+
+## Deployment notes
+
+- **Frontend (Vercel):** set the Root Directory to `Speech_X_Text/frontend`, Framework Preset to
+  *Other*, and inject `window.NEUVOICE_API_URL` as shown above.
+- **Backend:** run from `Speech_X_Text/backend`:
+  `uvicorn api:app --host 0.0.0.0 --port 10000`. Set `NEUVOICE_ALLOWED_ORIGINS` to your
+  frontend's origin.
+- **Avoid Render's free tier:** Whisper needs roughly 1.5–2 GB RAM to load, while that tier
+  provides 512 MB and will crash with a port-scan timeout. Use a paid host or a free AI platform
+  such as Hugging Face Spaces.
