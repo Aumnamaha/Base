@@ -92,6 +92,7 @@ GitHub Actions workflows live in `.github/workflows/` and are scoped to the `Neu
 |---|---|---|
 | `ci.yml` | Push/PR to `Neuro-Voice`, or manual | Ruff, bytecode compile, hermetic pytest, notebook reproducibility check, JS syntax check |
 | `docker.yml` | Tag `neurovoice-v*`, or manual | Builds the backend image and publishes it to GitHub Container Registry |
+| `full-stack.yml` | Manual only | Installs the real ML stack, verifies every runtime import, smoke-tests `openai/whisper-tiny` through `transcribe_audio`, validates the Dockerfile, and optionally runs gated integration tests |
 | `deploy-frontend.yml` | Manual only | Deploys `Speech_X_Text/frontend` to Vercel as preview or production |
 
 CI uses `Speech_X_Text/backend/requirements-ci.txt` so it never downloads the multi-GB ML stack;
@@ -100,6 +101,8 @@ the unit tests stub PyTorch and Hugging Face.
 Required secrets:
 
 - `deploy-frontend.yml`: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- `full-stack.yml`: `HF_TOKEN` is optional and is only needed when triggering with
+  `run_integration: true` (the account must have access to `mozilla-foundation/common_voice_11_0`).
 - `docker.yml`: uses the built-in `GITHUB_TOKEN` (the workflow requests `packages: write`).
 
 Build the backend image locally with:

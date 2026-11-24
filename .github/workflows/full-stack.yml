@@ -1,0 +1,115 @@
+name: Full-stack verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: Run gated Hugging Face integration tests
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Real ML stack smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: Speech_X_Text/backend
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HUGGING_FACE_HUB_TOKEN: ${{ secrets.HF_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            Speech_X_Text/backend/requirements.txt
+            Speech_X_Text/backend/requirements-dev.txt
+
+      - name: Install audio system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg libsndfile1 libgomp1
+
+      - name: Install full dependency stack
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Verify every runtime dependency imports
+        run: |
+          python -c "import torch, transformers, datasets, evaluate, accelerate, soundfile, librosa, jiwer, fastapi, uvicorn, multipart; print('runtime imports OK')"
+
+      - name: Verify Whisper pipeline loads
+        run: |
+          python - <<'PY'
+          import torch
+          from transformers import pipeline
+
+          transcriber = pipeline(
+              "automatic-speech-recognition",
+              model="openai/whisper-tiny",
+              device=0 if torch.cuda.is_available() else -1,
+          )
+          print("pipeline loaded:", type(transcriber).__name__)
+          PY
+
+      - name: Smoke-test our inference path with a generated WAV
+        env:
+          NEUVOICE_MODEL_ID: openai/whisper-tiny
+        run: |
+          python - <<'PY'
+          import math
+          import struct
+          import wave
+          from pathlib import Path
+
+          from src.pipeline.infer import transcribe_audio
+
+          sample_path = Path("smoke_tone.wav")
+          sample_rate = 16000
+          with wave.open(str(sample_path), "wb") as wav:
+              wav.setnchannels(1)
+              wav.setsampwidth(2)
+              wav.setframerate(sample_rate)
+              frames = b"".join(
+                  struct.pack("<h", int(12000 * math.sin(2 * math.pi * 440 * i / sample_rate)))
+                  for i in range(sample_rate)
+              )
+              wav.writeframes(frames)
+
+          try:
+              text = transcribe_audio(str(sample_path), language="en")
+              assert isinstance(text, str)
+              print("transcription type OK:", type(text).__name__)
+          finally:
+              sample_path.unlink(missing_ok=True)
+          PY
+
+      - name: Validate backend Dockerfile
+        run: docker build --quiet --tag neurovoice-backend:ci .
+
+      - name: Run gated integration tests (optional)
+        run: |
+          if [ "${{ inputs.run_integration }}" != "true" ]; then
+            echo "Integration tests not requested."
+          elif [ -z "$HF_TOKEN" ]; then
+            echo "::warning::HF_TOKEN secret is not set; skipping gated integration tests."
+          else
+            NEUVOICE_RUN_INTEGRATION=1 pytest -q -m integration
+          fi
