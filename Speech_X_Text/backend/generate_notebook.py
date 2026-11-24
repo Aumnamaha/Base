@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 notebook = {
     "cells": [
@@ -156,8 +157,11 @@ notebook = {
     "nbformat_minor": 5
 }
 
-# Write notebook to disk
-with open("f:/Git Projects/Speech_X_Text/backend/notebooks/education_guide.ipynb", "w", encoding="utf-8") as f:
+# Write notebook to disk next to this script
+output_path = Path(__file__).resolve().parent / "notebooks" / "education_guide.ipynb"
+output_path.parent.mkdir(parents=True, exist_ok=True)
+# Keep the committed notebook's CRLF line endings to avoid whole-file diffs.
+with output_path.open("w", encoding="utf-8", newline="\r\n") as f:
     json.dump(notebook, f, indent=4)
-    
-print("Successfully generated Notebook!")
+
+print(f"Successfully generated Notebook at {output_path}!")
