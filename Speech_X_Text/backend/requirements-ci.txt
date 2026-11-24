@@ -1,0 +1,7 @@
+# Minimal dependencies for hermetic CI. The ML stack is stubbed in unit tests,
+# so CI does not need to download PyTorch/Transformers.
+fastapi>=0.110.0
+httpx>=0.27.0
+python-multipart>=0.0.9
+pytest>=8.0.0
+ruff>=0.5.0
