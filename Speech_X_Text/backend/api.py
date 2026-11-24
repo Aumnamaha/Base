@@ -1,57 +1,85 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-import os
-import shutil
+"""FastAPI entry point for the NeuroVoice transcription service."""
 
-# Make sure the paths load correctly since we moved folders
+from __future__ import annotations
+
+import logging
+import shutil
+import tempfile
+from pathlib import Path
+from typing import Optional
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+
+from config import settings
 from src.pipeline.infer import transcribe_audio
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="NeuroVoice Speech-to-Text API")
 
-# Allow CORS for the Vercel frontend to talk to this backend
+# Credentials are not used, so a wildcard origin is valid. Restrict with
+# NEUVOICE_ALLOWED_ORIGINS in production.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Update this to your Vercel URL in production
-    allow_credentials=True,
+    allow_origins=list(settings.allowed_origins),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
+def _upload_suffix(filename: Optional[str]) -> str:
+    """Return a short, safe suffix derived from an uploaded filename."""
+    if not filename:
+        return ""
+    suffix = Path(filename).suffix
+    if not suffix or len(suffix) > 10 or not suffix[1:].isalnum():
+        return ""
+    return suffix
+
+
 @app.post("/transcribe")
 async def transcribe_endpoint(
     file: UploadFile = File(...),
-    language: str = Form("en")
+    language: str = Form(settings.default_language),
 ):
-    """
-    Receives an audio file from the frontend, saves it temporarily, 
-    runs Whisper inference, and returns the transcribed text.
-    """
-    if not file.content_type.startswith("audio/"):
+    """Save an uploaded clip to a unique temp file, transcribe it, and return text."""
+    content_type = file.content_type or ""
+    if not content_type.startswith("audio/"):
         raise HTTPException(status_code=400, detail="File must be an audio format")
 
-    temp_path = f"temp_{file.filename}"
-    
+    if language != "auto" and not settings.is_supported_language(language):
+        raise HTTPException(status_code=400, detail=f"Unsupported language code: {language}")
+
+    lang_arg = None if language == "auto" else language
+    temp_path: Optional[Path] = None
+
     try:
-        # Save file temporarily
-        with open(temp_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        # Run inference
-        # Automatically detects if 'auto' is passed by setting language=None
-        lang_arg = None if language == "auto" else language
-        transcription = transcribe_audio(temp_path, language=lang_arg)
-        
-        return {"text": transcription, "language": language}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-        
+        with tempfile.NamedTemporaryFile(
+            prefix="neurovoice_",
+            suffix=_upload_suffix(file.filename),
+            delete=False,
+        ) as temp_file:
+            temp_path = Path(temp_file.name)
+            shutil.copyfileobj(file.file, temp_file)
+
+        text = transcribe_audio(str(temp_path), model_id=settings.model_id, language=lang_arg)
+        return {"text": text, "language": language}
+    except Exception as exc:
+        logger.exception("Transcription failed for uploaded file %s", file.filename)
+        raise HTTPException(status_code=500, detail="Transcription failed") from exc
     finally:
-        # Cleanup temporary audio file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
 
 if __name__ == "__main__":
     import uvicorn
-    # Make sure to run inside the /backend directory
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
+
+    uvicorn.run(
+        "api:app",
+        host=settings.host,
+        port=settings.port,
+        reload=settings.reload,
+    )

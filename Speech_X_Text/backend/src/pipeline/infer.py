@@ -1,37 +1,56 @@
-import torch
-from transformers import pipeline
+"""Whisper automatic speech recognition helpers."""
 
-def transcribe_audio(audio_path, model_id="openai/whisper-small", language="hi"):
-    """
-    Runs inference on an audio file using either the base model or our fine-tuned version.
-    """
-    print(f"Loading pipeline for {model_id}...")
+from __future__ import annotations
+
+import logging
+from functools import lru_cache
+from typing import Any, Optional
+
+from config import settings
+
+logger = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=1)
+def _get_transcriber(model_id: str) -> Any:
+    """Create and cache one ASR pipeline per model id."""
+    import torch
+    from transformers import pipeline
+
     device = 0 if torch.cuda.is_available() else -1
-    
-    transcriber = pipeline(
-        "automatic-speech-recognition", 
-        model=model_id, 
-        device=device,
-        generate_kwargs={"language": f"<|{language}|>", "task": "transcribe"}
-    )
-    
-    print(f"Transcribing {audio_path}...")
-    result = transcriber(audio_path)
-    
+    logger.info("Loading ASR pipeline for %s on device %s", model_id, device)
+    return pipeline("automatic-speech-recognition", model=model_id, device=device)
+
+
+def transcribe_audio(
+    audio_path: str,
+    model_id: str = settings.model_id,
+    language: Optional[str] = settings.default_language,
+) -> str:
+    """Transcribe an audio file.
+
+    Pass ``language=None`` (or "auto" via the API) to let Whisper detect the language.
+    """
+    generate_kwargs: dict[str, Any] = {"task": "transcribe"}
+    if language:
+        generate_kwargs["language"] = f"<|{language}|>"
+
+    transcriber = _get_transcriber(model_id)
+    logger.info("Transcribing %s", audio_path)
+    result = transcriber(audio_path, generate_kwargs=generate_kwargs)
     return result["text"]
+
 
 if __name__ == "__main__":
     import sys
-    # For testing from command line:
-    # python src/pipeline/infer.py path/to/audio.wav hi
+
     if len(sys.argv) < 2:
         print("Usage: python src/pipeline/infer.py <audio_path> [language_code]")
         sys.exit(1)
-        
+
     path = sys.argv[1]
-    lang = sys.argv[2] if len(sys.argv) > 2 else "hi"
-    
-    # You can change model_id to "./models/whisper-finetuned-final" once trained
+    lang = sys.argv[2] if len(sys.argv) > 2 else settings.default_language
+
     text = transcribe_audio(path, language=lang)
     print("\nTranscription Result:")
     print("-" * 30)
