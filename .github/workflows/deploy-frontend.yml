@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Speech_X_Text/frontend
+        working-directory: frontend
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

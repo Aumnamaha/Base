@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        working-directory: Speech_X_Text/backend
+        working-directory: backend
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       HUGGING_FACE_HUB_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -38,8 +38,8 @@ jobs:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: |
-            Speech_X_Text/backend/requirements.txt
-            Speech_X_Text/backend/requirements-dev.txt
+            backend/requirements.txt
+            backend/requirements-dev.txt
 
       - name: Install audio system libraries
         run: |
@@ -50,6 +50,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
+
+      - name: Check dependency consistency
+        run: python -m pip check
 
       - name: Verify every runtime dependency imports
         run: |

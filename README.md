@@ -4,9 +4,9 @@ Multilingual Whisper transcription with a FastAPI backend and a zero-build vanil
 
 ## Architecture
 
-- `Speech_X_Text/frontend/` — static UI (HTML/CSS/JS), deployable to Vercel.
-- `Speech_X_Text/backend/` — Python AI logic and HTTP API.
-  - `api.py` — `POST /transcribe` endpoint.
+- `frontend/` — static UI (HTML/CSS/JS), deployable to Vercel.
+- `backend/` — Python AI logic and HTTP API.
+  - `api.py` — `POST /transcribe` and `GET /health` endpoints.
   - `config.py` — environment-driven settings.
   - `src/pipeline/infer.py` — cached Whisper ASR pipeline.
   - `src/data/prepare_data.py` — Common Voice preprocessing.
@@ -18,17 +18,17 @@ Audio is transcribed by the backend you point the UI at. It is **not** processed
 ## Run locally
 
 ```bash
-cd Speech_X_Text/backend
+cd backend
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
 python api.py                      # starts http://127.0.0.1:8000
 ```
 
-Then either double-click `Speech_X_Text/frontend/index.html`, or serve the folder:
+Then either double-click `frontend/index.html`, or serve the folder:
 
 ```bash
-cd Speech_X_Text/frontend
+cd frontend
 python -m http.server 5500
 ```
 
@@ -49,6 +49,8 @@ for the full list. Useful defaults:
 | `NEUVOICE_TRAINING_LANGUAGE` | `hi` | Language used by data prep/training |
 | `NEUVOICE_ALLOWED_ORIGINS` | `*` | Comma-separated CORS allow-list (no credentials are used) |
 | `NEUVOICE_MAX_STEPS` | `20` | Training smoke-test length |
+| `NEUVOICE_MAX_UPLOAD_MB` | `100` | Maximum accepted audio upload size |
+| `NEUVOICE_LOG_LEVEL` | `INFO` | Structured log level |
 
 For a deployed frontend, set the backend URL before `app.js` loads:
 
@@ -65,12 +67,16 @@ For a deployed frontend, set the backend URL before `app.js` loads:
 - `language` — one of `en`, `hi`, `bn`, `ta`, `te`, `mr`, or `auto`.
 
 Response: `{"text": "...", "language": "hi"}`. `"language"` echoes the requested value; `auto`
-lets Whisper detect the spoken language.
+lets Whisper detect the spoken language. Uploads larger than `NEUVOICE_MAX_UPLOAD_MB` are
+rejected with HTTP 413.
+
+`GET /health` returns `{"status": "ok", "model": "..."}` without loading a model, for readiness
+probes.
 
 ## Tests and linting
 
 ```bash
-cd Speech_X_Text/backend
+cd backend
 pytest
 ruff check .
 ```
@@ -92,10 +98,10 @@ GitHub Actions workflows live in `.github/workflows/` and are scoped to the `Neu
 |---|---|---|
 | `ci.yml` | Push/PR to `Neuro-Voice`, or manual | Ruff, bytecode compile, hermetic pytest, notebook reproducibility check, JS syntax check |
 | `docker.yml` | Tag `neurovoice-v*`, or manual | Builds the backend image and publishes it to GitHub Container Registry |
-| `full-stack.yml` | Manual only | Installs the real ML stack, verifies every runtime import, smoke-tests `openai/whisper-tiny` through `transcribe_audio`, validates the Dockerfile, and optionally runs gated integration tests |
-| `deploy-frontend.yml` | Manual only | Deploys `Speech_X_Text/frontend` to Vercel as preview or production |
+| `full-stack.yml` | Manual only | Installs the real ML stack, runs `pip check`, verifies every runtime import, smoke-tests `openai/whisper-tiny` through `transcribe_audio`, validates the Dockerfile, and optionally runs gated integration tests |
+| `deploy-frontend.yml` | Manual only | Deploys `frontend` to Vercel as preview or production |
 
-CI uses `Speech_X_Text/backend/requirements-ci.txt` so it never downloads the multi-GB ML stack;
+CI uses `backend/requirements-ci.txt` so it never downloads the multi-GB ML stack;
 the unit tests stub PyTorch and Hugging Face.
 
 Required secrets:
@@ -108,15 +114,15 @@ Required secrets:
 Build the backend image locally with:
 
 ```bash
-docker build -t neurovoice-backend Speech_X_Text/backend
+docker build -t neurovoice-backend backend
 docker run --rm -p 8000:8000 neurovoice-backend
 ```
 
 ## Deployment notes
 
-- **Frontend (Vercel):** set the Root Directory to `Speech_X_Text/frontend`, Framework Preset to
+- **Frontend (Vercel):** set the Root Directory to `frontend`, Framework Preset to
   *Other*, and inject `window.NEUVOICE_API_URL` as shown above.
-- **Backend:** run from `Speech_X_Text/backend`:
+- **Backend:** run from `backend`:
   `uvicorn api:app --host 0.0.0.0 --port 10000`. Set `NEUVOICE_ALLOWED_ORIGINS` to your
   frontend's origin.
 - **Avoid Render's free tier:** Whisper needs roughly 1.5–2 GB RAM to load, while that tier
