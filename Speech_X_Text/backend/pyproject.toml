@@ -1,0 +1,20 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "integration: requires network access to Hugging Face and Mozilla Common Voice",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["notebooks/"]
+
+[tool.ruff.lint]
+# B008 is the standard FastAPI Depends/File/Form pattern.
+select = ["E", "F", "I", "B"]
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Long lines here are verbatim notebook markdown/code payloads.
+"generate_notebook.py" = ["E501"]

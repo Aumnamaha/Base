@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments and secrets
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# ML artifacts and generated data
+models/
+data/results/
+.cache/
+.cache/huggingface/
+huggingface-cache/
+temp_*
+neurovoice_*.wav
+neurovoice_*.mp3
+*.log
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Frontend / deployment
+node_modules/
+dist/
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
