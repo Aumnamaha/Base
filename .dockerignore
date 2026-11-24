@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+*.log
+dev.log
+server.log
+skills
+examples
+tests
+test-runner.js
+README.md
+.env*
+!.env.example
