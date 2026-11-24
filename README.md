@@ -84,6 +84,31 @@ NEUVOICE_RUN_INTEGRATION=1 pytest -m integration
 
 You will need Hugging Face credentials with access to `mozilla-foundation/common_voice_11_0`.
 
+## CI/CD pipelines
+
+GitHub Actions workflows live in `.github/workflows/` and are scoped to the `Neuro-Voice` branch.
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | Push/PR to `Neuro-Voice`, or manual | Ruff, bytecode compile, hermetic pytest, notebook reproducibility check, JS syntax check |
+| `docker.yml` | Tag `neurovoice-v*`, or manual | Builds the backend image and publishes it to GitHub Container Registry |
+| `deploy-frontend.yml` | Manual only | Deploys `Speech_X_Text/frontend` to Vercel as preview or production |
+
+CI uses `Speech_X_Text/backend/requirements-ci.txt` so it never downloads the multi-GB ML stack;
+the unit tests stub PyTorch and Hugging Face.
+
+Required secrets:
+
+- `deploy-frontend.yml`: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- `docker.yml`: uses the built-in `GITHUB_TOKEN` (the workflow requests `packages: write`).
+
+Build the backend image locally with:
+
+```bash
+docker build -t neurovoice-backend Speech_X_Text/backend
+docker run --rm -p 8000:8000 neurovoice-backend
+```
+
 ## Deployment notes
 
 - **Frontend (Vercel):** set the Root Directory to `Speech_X_Text/frontend`, Framework Preset to
